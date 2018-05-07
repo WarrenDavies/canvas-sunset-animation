@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body{
+	margin:0;
+}
+canvas {
+	border: solid 5px black;
+	position:relative;
+}
+#holder {
+	display:block;
+	margin: 0px auto 0 auto;
+	width:810px;
+	height:610px;
+}
+</style>
+<script>
+
+// resize sprites and remove unneeded ones
+
+function init() {
+document.getElementById("canvas").focus();
+console.log("start");
+var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+window.requestAnimationFrame = requestAnimationFrame;
+
+//loading message
+
+
+
+// define variables
+var canvas, c;
+var INTERVAL = 20;
+
+// set up canvas
+canvas = document.getElementById("canvas");
+canvas.width = 800;
+canvas.height = 600;
+c = canvas.getContext("2d");
+var WIDTH = canvas.width;
+var HEIGHT = canvas.height;
+var keyUpHolder = 0;
+
+// initial canvas background 
+c.fillStyle = "#3399FF";
+c.rect(0,0,800,600);
+c.fill();
+
+
+
+var WIDTH = canvas.width;
+var HEIGHT = canvas.height;
+
+var keys = [];
+var loadingDots;
+var keys2 = [];
+var theBadGuys = [];
+var thePlatforms = [];
+var e = 0;
+var camera = {x: 0, y: 0, w: 800, h: 600};
+const gravity = 4;
+var imagesLoaded = false;
+setInterval(mainDraw, INTERVAL);
+var onPlatform = true;
+var jumping = false;
+var jumped = 0;
+var moveY = false;
+var moveX = false;
+var moved = false;
+var theCoins = [];
+var coinsCollected = 0;
+var spliced = 0;
+var theBullets = [];
+var neonTimer = 0;
+var mouse = { x: 0, y: 0};
+var foundFinalRestingPlace;
+var endStatsShowing = "stats";
+var daysPassed = 0;
+
+
+
+var sun = {
+	xPosition: 300,
+	yPosition: 100,
+	height: 200,
+	width: 200,
+	sizeStart: 10,
+	sizeEnd: 50,
+	timer: 0.3,
+}
+
+sun.gradient = c.createRadialGradient(sun.xPosition + (sun.height / 2), sun.yPosition + (sun.width / 2), sun.sizeStart, sun.xPosition + (sun.height / 2),sun.yPosition + (sun.width / 2), sun.sizeEnd),
+sun.gradient.addColorStop(0,"yellow");
+sun.gradient.addColorStop(0.0035,"yellow");
+sun.gradient.addColorStop(0.55,"yellow");
+sun.gradient.addColorStop(0.9,"rgb(255,255,0,0)");
+
+var sky = {
+	status: {
+		top: "day",
+		bottom: "day",
+		platform: "day",
+	},
+	day: {
+		r: 173,
+		g: 216,
+		b: 230,
+	},
+	sunsetOrange: {
+		r: 255,
+		g: 165,
+		b: 0,
+	},
+	sunsetOrange: {
+		r: 255,
+		g: 204,
+		b: 51,
+	},
+	
+	sunsetPink: {
+		r: 220,
+		g: 127,
+		b: 190,
+	},
+	sunsetStatus: "not set",
+	night: {
+		r: 19,
+		g: 24,
+		b: 190,
+	},
+	currentBottom: {
+		r: 51,
+		g: 153,
+		b: 255,
+	},
+	currentTop: {
+		r: 51,
+		g: 153,
+		b: 255,
+	},
+	colorStopPosition: [0,1],
+}
+sky.gradient = c.createLinearGradient(0,0,0,600);
+sky.gradient.addColorStop(0,"lightblue");
+sky.gradient.addColorStop(1,"lightblue");
+
+
+
+
+function clear(c) {
+	c.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+
+function updateSun() {
+// sun.timer determines how fast the sun moves down the screen by incrementing the sun's y coordinate each frame
+	sun.yPosition += sun.timer;
+	
+// if the sun is beyond y = 2000, put it back above the screen and put the size back to normal. This is basically resetting the sun. Only the top half of the gradient is set to day to give the impression of the morning breaking.
+	if (sun.yPosition > 1500) {
+		if (Player1.status != "dead") {
+			daysPassed += 1;
+		}
+		sun.yPosition = 100;
+		sun.sizeStart = 10;
+		sun.sizeEnd = 50;
+		sky.gradientMidPoint = 1;
+		sky.status.top = "day";
+		sky.status.platform = "day";
+		sky.colorStopPosition[0] = 0;
+		sky.sunsetStatus = "not set";
+	}
+
+// The sun will just be coming into the screen as the bottom half of the gradient fades into the day colors. Now we're fully into the daytime
+	if (sun.yPosition > -150 && sun.yPosition < 0) {
+		sky.status.bottom = "day";
+	}
+
+// put the gradient start point to the bottom of the screen before reaching y = 400, which will activate the sunset. This is so the gradient can be moved upward gradually as the sun sets. Changing this will have no effect at present as both top and bottom are set to "day".
+	if (sun.yPosition < 400 && sun.yPosition > 390) {
+		//sky.colorStopPosition[0] = 1;
+	}
+	
+// turn sunset on. Start gradually increasing the size of the sun, set the bottom half of the gradient to the sunset color
+	if (sun.yPosition >= 400) {
+		sky.status.platform = "sunset";
+// choose a pink or orange sunset		
+		if (sky.sunsetStatus != "set") {
+			if (Math.floor(Math.random() * 2) === 0) {
+				sky.status.bottom = "sunsetOrange";
+			} else {
+				sky.status.bottom = "sunsetPink";
+			}
+		}
+			sky.sunsetStatus = "set";
+			if (sun.sizeStart < 40) {
+				sun.sizeStart += .1;
+			}
+			if (sun.sizeEnd < 80) {
+				sun.sizeEnd += .1;
+			}
+		}
+	
+	if (sun.yPosition >= 600) {
+		sky.status.top = sky.status.bottom;	
+	}
+	
+// darkness begins to fall 	
+	if (sun.yPosition >= 700) {
+		sky.status.top = "night";
+	}
+
+// darkness falls completely
+	if (sun.yPosition >= 800) {
+		sky.status.bottom = "night";
+		sky.status.platform = "night";
+	}
+//console.log(sun.yPosition);
+	
+// update the sun object's radial gradient to reflect the above changes
+	sun.gradient = c.createRadialGradient(sun.xPosition + (sun.height / 2), sun.yPosition + (sun.width / 2), sun.sizeStart, sun.xPosition + (sun.height / 2),sun.yPosition + (sun.width / 2), sun.sizeEnd);
+	sun.gradient.addColorStop(0,"yellow");
+	sun.gradient.addColorStop(0.55,"yellow");
+	sun.gradient.addColorStop(0.9,"rgb(255,255,0,0)");
+}
+
+function updateSky() {
+/// change the color of the bottom and top halves of the background gradient by changing the rgb values by 2 each frame, according to the status of the relevant sky property. The sky property is determined by the sun position in updateSun()
+// bottom half
+	for (var rgbCurrent in sky.currentBottom) {
+		if (sky.currentBottom[rgbCurrent] > sky[sky.status.bottom][rgbCurrent]) {
+			sky.currentBottom[rgbCurrent] -= 1;
+		}	
+		if (sky.currentBottom[rgbCurrent] < sky[sky.status.bottom][rgbCurrent]) {
+			sky.currentBottom[rgbCurrent] += 1;
+		}	
+		if (sky.currentBottom[rgbCurrent] - sky[sky.status.bottom][rgbCurrent] === 1 || sky.currentBottom[rgbCurrent] - sky[sky.status.bottom][rgbCurrent] === -1) {
+			sky.currentBottom[rgbCurrent] = sky[sky.status.bottom][rgbCurrent];
+		}
+	}
+// top half
+	for (var rgbCurrent in sky.currentTop) {
+		if (sky.currentTop[rgbCurrent] > sky[sky.status.top][rgbCurrent]) {
+			sky.currentTop[rgbCurrent] -= 1;
+		}	
+		if (sky.currentTop[rgbCurrent] < sky[sky.status.top][rgbCurrent]) {
+			sky.currentTop[rgbCurrent] += 1;
+		}	
+		if (sky.currentTop[rgbCurrent] - sky[sky.status.top][rgbCurrent] === 1 || sky.currentTop[rgbCurrent] - sky[sky.status.top][rgbCurrent] === -1) {
+			sky.currentTop[rgbCurrent] = sky[sky.status.top][rgbCurrent];
+		}
+	}
+
+// now actually draw the background gradient
+	sky.gradient = c.createLinearGradient(0, 0, 0, 600);
+	sky.gradient.addColorStop(sky.colorStopPosition[0], "rgb(" + sky.currentTop.r + "," + sky.currentTop.g + "," + sky.currentTop.b);
+	sky.gradient.addColorStop(sky.colorStopPosition[1],"rgb(" + sky.currentBottom.r + "," + sky.currentBottom.g + "," + sky.currentBottom.b);
+}
+
+
+function drawBackground() {
+// clear canvas
+	clear(c);  
+
+//draw the sky
+	c.beginPath();
+	c.fillStyle = sky.gradient;
+	c.rect(0 ,0, 800, 600);
+	c.fill();
+	
+//draw the sun
+	c.fillStyle = sun.gradient;
+	c.rect(sun.xPosition,sun.yPosition,sun.height,sun.width);
+	c.fill();
+}
+
+
+/////////////////////////////////////
+/////////////////////////////////////
+// drawing function / game loop//////
+/////////////////////////////////////
+/////////////////////////////////////
+function mainDraw(canvas) {
+	
+	
+	
+		updateSun();
+		updateSky();
+		drawBackground();
+		if (keys[38]) {
+			sun.yPosition -= 2;
+		}
+		if (keys[40]) {
+			sun.yPosition += 2 - sun.timer;
+		}
+	
+}
+///////////////////////////////////////
+///////////////////////////////////////
+/////////End of main game loop/////////
+///////////////////////////////////////
+///////////////////////////////////////
+
+
+// event listeners
+canvas.addEventListener("keydown", function (e) {
+	if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+	keys[e.keyCode] = true;
+});
+canvas.addEventListener("keyup", function (e) {
+	keys[e.keyCode] = false;
+});
+
+canvas.addEventListener('mousemove', mouseMove, true);
+canvas.addEventListener("click", function() {
+	if (Player1.status != "dead") {
+		createBullet(mouse.x + camera.x, mouse.y + camera.y, Player1.x + (Player1.w / 2), Player1.y + (Player1.h / 2)  );
+	}
+});
+
+function mouseMove(e) {
+    if (e.offsetX) {
+        mouse.x = e.offsetX;
+        mouse.y = e.offsetY;
+    }
+    else if (e.layerX) {
+        mouse.x = e.layerX;
+        mouse.y = e.layerY;
+    }
+}
+
+} // init
+</script>
+</head>
+<body onload="init()">
+<div id = "holder">
+<canvas id="canvas" width="800" height="600" tabindex='1'></canvas>
+</div>
+</body>
+</html>
