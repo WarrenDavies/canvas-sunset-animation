@@ -26,39 +26,15 @@ console.log("start");
 var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 window.requestAnimationFrame = requestAnimationFrame;
 
-//loading message
-
-
-
-// define variables
 var canvas, c;
 var INTERVAL = 20;
-
-// set up canvas
 canvas = document.getElementById("canvas");
 canvas.width = 800;
 canvas.height = 600;
 c = canvas.getContext("2d");
 var WIDTH = canvas.width;
 var HEIGHT = canvas.height;
-var keyUpHolder = 0;
-
-// initial canvas background 
-c.fillStyle = "#3399FF";
-c.rect(0,0,800,600);
-c.fill();
-
-var WIDTH = canvas.width;
-var HEIGHT = canvas.height;
-
-var keys = [];
-var e = 0;
 setInterval(mainDraw, INTERVAL);
-var onPlatform = true;
-var spliced = 0;
-var mouse = { x: 0, y: 0};
-
-
 
 var sun = {
 	xPosition: 300,
@@ -131,13 +107,9 @@ sky.gradient = c.createLinearGradient(0,0,0,600);
 sky.gradient.addColorStop(0,"lightblue");
 sky.gradient.addColorStop(1,"lightblue");
 
-
-
-
 function clear(c) {
 	c.clearRect(0, 0, WIDTH, HEIGHT);
 }
-
 
 function updateSun() {
 // sun.timer determines how fast the sun moves down the screen by incrementing the sun's y coordinate each frame
@@ -173,7 +145,6 @@ function updateSun() {
 			}
 			sky.sunsetStatus = "set";
 		}
-		console.log(sky.status.bottom);
 			if (sun.sizeStart < 40) {
 				sun.sizeStart += .1;
 			}
@@ -219,7 +190,7 @@ function pushStar() {
 
 function drawStars() {
 	if (sky.starTransparency < 1) {
-		sky.starTransparency += 0.005;
+		sky.starTransparency += 0.01;
 	}
 	sky.theStars.forEach(function(i, j) {
 		c.fillStyle = "rgb(" + sky.starColor + "," + sky.starColor + "," + sky.starColor + "," + sky.starTransparency + ")";
@@ -260,7 +231,6 @@ function updateSky() {
 	sky.gradient.addColorStop(sky.colorStopPosition[1],"rgb(" + sky.currentBottom.r + "," + sky.currentBottom.g + "," + sky.currentBottom.b);
 }
 
-
 function drawBackground() {
 // clear canvas
 	clear(c);  
@@ -276,12 +246,10 @@ function drawBackground() {
 	c.rect(sun.xPosition,sun.yPosition,sun.height,sun.width);
 	c.fill();
 	
-	
 	if (sky.theStars) {
 		drawStars();
 	}
 }
-
 
 /////////////////////////////////////
 /////////////////////////////////////
@@ -289,53 +257,15 @@ function drawBackground() {
 /////////////////////////////////////
 /////////////////////////////////////
 function mainDraw(canvas) {
-	
-	
-	
 		updateSun();
 		updateSky();
 		drawBackground();
-		if (keys[38]) {
-			sun.yPosition -= 2;
-		}
-		if (keys[40]) {
-			sun.yPosition += 2 - sun.timer;
-		}
-	
 }
 ///////////////////////////////////////
 ///////////////////////////////////////
 /////////End of main game loop/////////
 ///////////////////////////////////////
 ///////////////////////////////////////
-
-
-// event listeners
-canvas.addEventListener("keydown", function (e) {
-	if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
-        e.preventDefault();
-    }
-	keys[e.keyCode] = true;
-});
-canvas.addEventListener("keyup", function (e) {
-	keys[e.keyCode] = false;
-});
-
-canvas.addEventListener('mousemove', mouseMove, true);
-canvas.addEventListener("click", function() {
-
-});
-
-function mouseMove(e) {
-    if (e.offsetX) {
-        mouse.x = e.offsetX;
-        mouse.y = e.offsetY;
-    }
-    else if (e.layerX) {
-        mouse.x = e.layerX;
-        mouse.y = e.layerY;
-    }
-}
 
 } // init
 </script>
